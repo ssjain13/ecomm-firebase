@@ -8,14 +8,16 @@ import {
   getDoc,
   query,
   getDocs,
+  deleteDoc,
+  where,
+  getCountFromServer,
 } from "firebase/firestore";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-
 initializeApp({
-  apiKey:process.env.API_KEY,
+  apiKey: process.env.API_KEY,
   authDomain: process.env.AUTH_DOMAIN,
   databaseURL: process.env.DATABASE_URL,
   projectId: process.env.PROJECT_ID,
@@ -26,30 +28,57 @@ initializeApp({
 
 const db = getFirestore();
 
-export async function fetchCategoriesApi() {
-  const collectionRef = collection(db, "Categories");
+export async function save(param, _collection) {
+  const collectionRef = collection(db, _collection);
+  const docRef = doc(collectionRef);
+
+  await setDoc(docRef, {
+    ...param,
+    id: docRef.id,
+  });
+  param.id = docRef.id;
+
+  return param;
+}
+
+export async function updateApi(data, collectionParam) {
+  var isUpdated = false;
+  const docRef = doc(db, collectionParam, data.id);
+  const d = await getDoc(docRef);
+
+  if (d.exists()) {
+    setDoc(docRef, data);
+    isUpdated = true;
+  }
+  return isUpdated;
+}
+
+export async function deleteApi(param, _collection) {
+  const docRef = doc(db, _collection, param.id);
+  const snapShot = await getDoc(docRef);
+  if (snapShot.exists()) {
+    deleteDoc(docRef);
+    return true;
+  } else return false;
+}
+export async function fetch(_collection) {
+  const collectionRef = collection(db, _collection);
   const q = query(collectionRef);
   const snapShot = await getDocs(q);
   const result = [];
 
-  snapShot.forEach((categories) => {
-    const res = categories.data();
-    const category = {
-      id: "",
-      name: "",
-      description: "",
-    };
-    category.description = res.description;
-    category.name = res.name;
-    category.id = categories.id;
-    result.push(category);
+  snapShot.forEach((products) => {
+    const res = products.data();
+    result.push(res);
   });
 
   return result;
 }
 
-export async function createCategoryApi(param) {
-  const categoryCollection = collection(db, "Categories");
-  const newDoc = await addDoc(categoryCollection, param);
-  return newDoc.id;
+export async function getProductCountForCategory(category) {
+  console.log(category);
+  const coll = collection(db, "Products");
+  const q = query(coll, where("category", "==", category.name));
+  const snapshot = await getCountFromServer(q);
+  return snapshot.data().count;
 }
