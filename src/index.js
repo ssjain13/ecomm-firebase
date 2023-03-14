@@ -42,7 +42,7 @@ app.post("/saveCategory", (req, res) => {
   const data = req.body;
   save(data, "Categories")
     .then((result) => {
-      res.status(200).send(result );
+      res.status(200).send(result);
     })
     .catch((err) => {
       console.log(err);
@@ -114,6 +114,9 @@ app.get("/getCountByCategory", (req, res) => {
     res.status(200).send({ productCount, category: req.query.category });
   });
 });
-app.listen(9000, () => {
-  console.log("listening on 9000");
+
+const PORT = process.env.PORT || 3030;
+
+app.listen(PORT, () => {
+  console.log(`Listening on ${PORT}`);
 });
