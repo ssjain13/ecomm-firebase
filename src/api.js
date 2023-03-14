@@ -67,18 +67,36 @@ export async function fetch(_collection) {
   const snapShot = await getDocs(q);
   const result = [];
 
-  snapShot.forEach((products) => {
-    const res = products.data();
+  snapShot.forEach((r) => {
+    const res = r.data();
     result.push(res);
   });
 
   return result;
 }
 
-export async function getProductCountForCategory(category) {
-  console.log(category);
+const productCategory = {
+  category: "",
+  count: 0,
+};
+export async function getProductCountForCategory(param) {
+  const countFinal = [];
+ /*  fetch("Categories").then((data) => {
+    data.forEach((category) => {
+      getCount(category).then((val) => {
+        productCategory.count = val;
+        productCategory.category = category.id;        
+      });
+    });
+    console.log(countFinal);
+  }); */
+
+  return getCount(param);
+ 
+}
+async function getCount(param) {
   const coll = collection(db, "Products");
-  const q = query(coll, where("category", "==", category.name));
+  const q = query(coll, where("category", "==", param));
   const snapshot = await getCountFromServer(q);
   return snapshot.data().count;
 }

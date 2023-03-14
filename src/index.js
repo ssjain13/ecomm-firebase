@@ -42,7 +42,7 @@ app.post("/saveCategory", (req, res) => {
   const data = req.body;
   save(data, "Categories")
     .then((result) => {
-      res.status(200).send({ data: result });
+      res.status(200).send(result );
     })
     .catch((err) => {
       console.log(err);
@@ -109,9 +109,9 @@ app.put("/updateCategory", (req, res) => {
 });
 
 app.get("/getCountByCategory", (req, res) => {
-  getProductCountForCategory(req.body).then((productCount) => {
-    res.status(200).send({productCount});
-
+  console.log(req.query.category);
+  getProductCountForCategory(req.query.category).then((productCount) => {
+    res.status(200).send({ productCount, category: req.query.category });
   });
 });
 app.listen(9000, () => {
