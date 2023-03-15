@@ -6,9 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "test",
-    "start": "nodemon src/index.js",
-    "build":"npm build"
-    
+    "start": "nodemon src/index.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +15,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "firebase": "^9.17.2",
-    "nodemon": "^2.0.21"
+    "nodemon": "^2.0.21",
+    "properties-reader": "^2.2.0"
   }
 }

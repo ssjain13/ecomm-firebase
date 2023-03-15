@@ -8,6 +8,7 @@ import {
 } from "./api.js";
 import express from "express";
 import cors from "cors";
+import { createUser, loginUser, signOutUser } from "./auth.js";
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
@@ -113,6 +114,36 @@ app.get("/getCountByCategory", (req, res) => {
   getProductCountForCategory(req.query.category).then((productCount) => {
     res.status(200).send({ productCount, category: req.query.category });
   });
+});
+
+app.post("/register", (req, res) => {
+  const { username, password } = req.body;
+  createUser(username, password)
+    .then((user) => {
+      user
+        ? res.status(200).send(user)
+        : res.status(500).send("User not created");
+    })
+    .catch((err) => {
+      res.status(500).send(err);
+    });
+});
+
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+  loginUser(username, password)
+    .then((user) => {      
+      res.status(200).send(user);
+    })
+    .catch((err) => {
+       res.status(500).send({ code: err.message, message: err.message });
+    });
+});
+
+app.get("/signout", (req, res) => {
+  signOutUser()
+    .then(() => res.status(200).send("User signed out successfully"))
+    .catch((err) => res.status(500).status(err));
 });
 
 const PORT = process.env.PORT || 3030;

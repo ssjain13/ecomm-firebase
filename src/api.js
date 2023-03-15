@@ -27,6 +27,26 @@ initializeApp({
 });
 
 const db = getFirestore();
+export async function createUserProfile(userInfo) {
+  const user = {
+    displayName: "",
+    email: "",
+    phone: "",
+    address: "",
+    photoUrl: "",
+    uid: "",
+  };
+
+  // Update user profile in firestore.
+  const collectionRef = collection(db, "User");
+  const docRef = doc(collectionRef);
+
+  await setDoc(docRef, {
+    ...userInfo,
+  });
+
+  return userInfo;
+}
 
 export async function save(param, _collection) {
   const collectionRef = collection(db, _collection);
@@ -81,7 +101,7 @@ const productCategory = {
 };
 export async function getProductCountForCategory(param) {
   const countFinal = [];
- /*  fetch("Categories").then((data) => {
+  /*  fetch("Categories").then((data) => {
     data.forEach((category) => {
       getCount(category).then((val) => {
         productCategory.count = val;
@@ -92,7 +112,6 @@ export async function getProductCountForCategory(param) {
   }); */
 
   return getCount(param);
- 
 }
 async function getCount(param) {
   const coll = collection(db, "Products");
