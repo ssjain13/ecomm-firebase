@@ -117,8 +117,9 @@ app.get("/getCountByCategory", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const { username, password } = req.body;
-  createUser(username, password)
+  const user = req.body;
+
+  createUser(user)
     .then((user) => {
       user
         ? res.status(200).send(user)
@@ -132,11 +133,11 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   loginUser(username, password)
-    .then((user) => {      
+    .then((user) => {
       res.status(200).send(user);
     })
     .catch((err) => {
-       res.status(500).send({ code: err.message, message: err.message });
+      res.status(500).send({ code: err.message, message: err.message });
     });
 });
 

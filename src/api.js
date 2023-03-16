@@ -28,14 +28,7 @@ initializeApp({
 
 const db = getFirestore();
 export async function createUserProfile(userInfo) {
-  const user = {
-    displayName: "",
-    email: "",
-    phone: "",
-    address: "",
-    photoUrl: "",
-    uid: "",
-  };
+  
 
   // Update user profile in firestore.
   const collectionRef = collection(db, "User");

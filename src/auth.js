@@ -1,4 +1,3 @@
-import { async, errorPrefix } from "@firebase/util";
 import {
   createUserWithEmailAndPassword,
   getAuth,
@@ -7,29 +6,37 @@ import {
 } from "firebase/auth";
 
 import PropertiesReader from "properties-reader";
+import { createUserProfile } from "./api.js";
+
 const auth = getAuth();
 var properties = PropertiesReader("error.properties");
 
-export async function createUser(username, password) {
-    const userInfo = {
-        displayName: "",
-        email: "",
-        phone: "",
-        address: "",
-        photoUrl: "",
-        uid: "",
-        token: "",
-      };
+export async function createUser(userObj) {
+  const userInfo = {
+    displayName: "",
+    email: "",
+    phone: "",
+    address: "",
+    photoUrl: "",
+    uid: "",
+  };
 
-  return createUserWithEmailAndPassword(auth, username, password)
+  return createUserWithEmailAndPassword(auth, userObj.email, userObj.password)
     .then((creds) => {
-      const user = creds.user;
+      const user = creds.user;      
+      setUserInfo(userInfo, user, userObj);
+      return createUserProfile(userInfo);
       
-      return user;
     })
     .catch((error) => {
       return { code: error.code, message: error.message };
     });
+}
+
+function setUserInfo(userInfo, user, userObj) {
+  userInfo.uid = user.uid;
+  userInfo.displayName = userObj.displayName;
+  userInfo.email = userObj.email;
 }
 
 export async function loginUser(username, password) {
@@ -46,8 +53,8 @@ export async function loginUser(username, password) {
     .then((userCredential) => {
       user.displayName = userCredential.user.displayName;
       user.email = userCredential.user.email;
-      userCredential.user.getIdToken().then(data=>{
-            user.token = data;
+      userCredential.user.getIdToken().then((data) => {
+        user.token = data;
       });
       user.uid = userCredential.user.uid;
       return user;
