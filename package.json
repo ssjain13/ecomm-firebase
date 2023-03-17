@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "test",
+    "test": "jest",
     "start": "nodemon src/index.js"
   },
   "author": "",
@@ -17,5 +17,9 @@
     "firebase": "^9.17.2",
     "nodemon": "^2.0.21",
     "properties-reader": "^2.2.0"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "supertest": "^6.3.3"
   }
 }

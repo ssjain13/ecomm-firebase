@@ -27,9 +27,21 @@ initializeApp({
 });
 
 const db = getFirestore();
-export async function createUserProfile(userInfo) {
-  
 
+export async function getUserProfile(id) {
+  const docRef = collection(db, "User");
+  const q = query(docRef, where("uid", "==", id));
+  const querySnapshot = await getDocs(q);
+  var userProfile;
+  querySnapshot.forEach((doc) => {
+    userProfile = doc.data();
+  });
+  if (!userProfile) {
+    throw new Error(`User profile not found`);
+  }
+  return userProfile;
+}
+export async function createUserProfile(userInfo) {
   // Update user profile in firestore.
   const collectionRef = collection(db, "User");
   const docRef = doc(collectionRef);

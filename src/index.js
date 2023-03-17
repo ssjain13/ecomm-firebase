@@ -5,6 +5,7 @@ import {
   save,
   deleteApi,
   getProductCountForCategory,
+  getUserProfile,
 } from "./api.js";
 import express from "express";
 import cors from "cors";
@@ -31,6 +32,16 @@ app.get("/fetchCategories", (req, res) => {
 
 app.get("/fetchProducts", (req, res) => {
   fetch("Products")
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+});
+
+app.get("/fetchUsers", (req, res) => {
+  fetch("User")
     .then((data) => {
       res.send(data);
     })
@@ -118,15 +129,12 @@ app.get("/getCountByCategory", (req, res) => {
 
 app.post("/register", (req, res) => {
   const user = req.body;
-
   createUser(user)
     .then((user) => {
-      user
-        ? res.status(200).send(user)
-        : res.status(500).send("User not created");
+      res.status(200).send(user);
     })
     .catch((err) => {
-      res.status(500).send(err);
+      res.status(500).send({ message: err.message });
     });
 });
 
@@ -137,7 +145,18 @@ app.post("/login", (req, res) => {
       res.status(200).send(user);
     })
     .catch((err) => {
-      res.status(500).send({ code: err.message, message: err.message });
+      res.status(500).send({ message: err.message });
+    });
+});
+
+app.get("/fetchUserProfile", (req, res) => {
+  const id = req.body.id;
+  getUserProfile(id)
+    .then((user) => {
+      res.status(200).send(user);
+    })
+    .catch((err) => {
+      res.status(500).send({ message: err.message });
     });
 });
 
@@ -152,3 +171,5 @@ const PORT = process.env.PORT || 3030;
 app.listen(PORT, () => {
   console.log(`Listening on ${PORT}`);
 });
+
+module.exports = app;

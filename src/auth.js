@@ -6,7 +6,7 @@ import {
 } from "firebase/auth";
 
 import PropertiesReader from "properties-reader";
-import { createUserProfile } from "./api.js";
+import { createUserProfile, getUserProfile } from "./api.js";
 
 const auth = getAuth();
 var properties = PropertiesReader("error.properties");
@@ -21,16 +21,22 @@ export async function createUser(userObj) {
     uid: "",
   };
 
-  return createUserWithEmailAndPassword(auth, userObj.email, userObj.password)
-    .then((creds) => {
-      const user = creds.user;      
-      setUserInfo(userInfo, user, userObj);
-      return createUserProfile(userInfo);
-      
-    })
-    .catch((error) => {
-      return { code: error.code, message: error.message };
-    });
+  try {
+    const creds = await createUserWithEmailAndPassword(
+      auth,
+      userObj.email,
+      userObj.password
+    );
+    const user = creds.user;
+    setUserInfo(userInfo, user, userObj);
+    return createUserProfile(userInfo);
+  } catch (error) {
+    const code = properties.get(error.code);
+    if (code) {
+      error.message = code;
+    }
+    throw error;
+  }
 }
 
 function setUserInfo(userInfo, user, userObj) {
@@ -40,29 +46,22 @@ function setUserInfo(userInfo, user, userObj) {
 }
 
 export async function loginUser(username, password) {
-  const user = {
-    displayName: "",
-    email: "",
-    phone: "",
-    address: "",
-    photoUrl: "",
-    uid: "",
-    token: "",
-  };
-  return signInWithEmailAndPassword(auth, username, password)
-    .then((userCredential) => {
-      user.displayName = userCredential.user.displayName;
-      user.email = userCredential.user.email;
-      userCredential.user.getIdToken().then((data) => {
-        user.token = data;
-      });
-      user.uid = userCredential.user.uid;
-      return user;
-    })
-    .catch((error) => {
-      error.message = properties.get(error.code);
-      throw error;
-    });
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      username,
+      password
+    );
+    const uid = userCredential.user.uid;
+    const profile = await getUserProfile(uid);
+    return profile;
+  } catch (error) {
+    const code = properties.get(error.code);
+    if (code) {
+      error.message = code;
+    }
+    throw error;
+  }
 }
 
 export async function signOutUser() {
