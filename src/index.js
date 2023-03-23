@@ -10,9 +10,11 @@ import {
 import express from "express";
 import cors from "cors";
 import { createUser, loginUser, signOutUser } from "./auth.js";
-const app = express();
+import multer from "multer";
+export const app = express();
 app.use(bodyParser.json());
 app.use(cors());
+const upload = multer();
 
 app.get("/", (req, res) => {
   res.writeHead(200, { "Content-Type": "text/html" });
@@ -61,11 +63,11 @@ app.post("/saveCategory", (req, res) => {
     });
 });
 
-app.post("/saveProduct", (req, res) => {
-  const data = req.body;
-  save(data, "Products")
+app.post("/saveProduct", upload.single("image"), (req, res) => {
+  
+  save(req, "Products")
     .then((result) => {
-      res.status(200).send(result);
+      res.status(200).send( result );
     })
     .catch((err) => {
       console.log(err);
@@ -168,8 +170,10 @@ app.get("/signout", (req, res) => {
 
 const PORT = process.env.PORT || 3030;
 
-app.listen(PORT, () => {
+export const server = app.listen(PORT, () => {
   console.log(`Listening on ${PORT}`);
 });
 
-module.exports = app;
+function stop() {
+  server.close();
+}

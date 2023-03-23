@@ -52,11 +52,13 @@ export async function loginUser(username, password) {
       username,
       password
     );
+
     const uid = userCredential.user.uid;
     const profile = await getUserProfile(uid);
     return profile;
   } catch (error) {
     const code = properties.get(error.code);
+
     if (code) {
       error.message = code;
     }

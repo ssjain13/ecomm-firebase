@@ -1,4 +1,5 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApp } from "firebase/app";
+
 import {
   getFirestore,
   doc,
@@ -12,25 +13,36 @@ import {
   where,
   getCountFromServer,
 } from "firebase/firestore";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
+
 import dotenv from "dotenv";
 
 dotenv.config();
 
-initializeApp({
+const config = {
   apiKey: process.env.API_KEY,
   authDomain: process.env.AUTH_DOMAIN,
   databaseURL: process.env.DATABASE_URL,
   projectId: process.env.PROJECT_ID,
-  storageBucket: process.env.STORAGE_BUCKET,
+  storageBucket: "gs://my-app-9c783.appspot.com",
   messagingSenderId: process.env.MESSAGE_CODE,
   appId: process.env.APP_ID,
-});
+};
+
+const app = initializeApp(config);
 
 const db = getFirestore();
 
 export async function getUserProfile(id) {
   const docRef = collection(db, "User");
   const q = query(docRef, where("uid", "==", id));
+
   const querySnapshot = await getDocs(q);
   var userProfile;
   querySnapshot.forEach((doc) => {
@@ -41,6 +53,7 @@ export async function getUserProfile(id) {
   }
   return userProfile;
 }
+
 export async function createUserProfile(userInfo) {
   // Update user profile in firestore.
   const collectionRef = collection(db, "User");
@@ -56,14 +69,20 @@ export async function createUserProfile(userInfo) {
 export async function save(param, _collection) {
   const collectionRef = collection(db, _collection);
   const docRef = doc(collectionRef);
+  const url = await uploadFile(param.file);
+
+  const data = JSON.parse(param.body.data);
 
   await setDoc(docRef, {
-    ...param,
+    ...data,
     id: docRef.id,
+    url: url,
   });
-  param.id = docRef.id;
 
-  return param;
+  data.id = docRef.id;
+  data.url = url;
+
+  return data;
 }
 
 export async function updateApi(data, collectionParam) {
@@ -123,4 +142,22 @@ async function getCount(param) {
   const q = query(coll, where("category", "==", param));
   const snapshot = await getCountFromServer(q);
   return snapshot.data().count;
+}
+
+export async function uploadFile(file) {
+  const storage = getStorage(app);
+  const timestamp = new Date().getTime();
+  const storageRef = ref(
+    storage,
+    "images/" + `${file.originalname}_${timestamp}`
+  );
+
+  const metadata = {
+    contentType: "image/jpeg",  };
+
+  const snapshot = await uploadBytes(storageRef, file.buffer, metadata);
+
+  const downloadUrl = await getDownloadURL(snapshot.ref);
+  return downloadUrl;
+ 
 }
