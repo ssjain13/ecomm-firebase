@@ -118,29 +118,24 @@ export async function fetch(_collection) {
   return result;
 }
 
-const productCategory = {
-  category: "",
-  count: 0,
-};
-export async function getProductCountForCategory(param) {
-  const countFinal = [];
-  /*  fetch("Categories").then((data) => {
-    data.forEach((category) => {
-      getCount(category).then((val) => {
-        productCategory.count = val;
-        productCategory.category = category.id;        
-      });
-    });
-    console.log(countFinal);
-  }); */
 
-  return getCount(param);
+export async function getProductCountForCategory() {
+  const countFinal = [];
+  const categories = await fetch("Categories");
+  
+  
+  for (const category of categories) {
+    const data = await getCount(category.name);
+    countFinal.push({ count: data, category: category.name });    
+  }
+  
+  return countFinal;
 }
 async function getCount(param) {
   const coll = collection(db, "Products");
   const q = query(coll, where("category", "==", param));
-  const snapshot = await getCountFromServer(q);
-  return snapshot.data().count;
+  const snapshot = await getDocs(q);
+  return snapshot.size;
 }
 
 export async function uploadFile(file) {
@@ -160,3 +155,4 @@ export async function uploadFile(file) {
   const downloadUrl = await getDownloadURL(snapshot.ref);
   return downloadUrl;
 }
+

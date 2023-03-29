@@ -42,7 +42,7 @@ app.get("/fetchProducts", (req, res) => {
     });
 });
 
-app.get("/fetchUsers", (req, res) => {
+app.get("/fetchAllUsers", (req, res) => {
   fetch("User")
     .then((data) => {
       res.send(data);
@@ -64,10 +64,9 @@ app.post("/saveCategory", (req, res) => {
 });
 
 app.post("/saveProduct", upload.single("image"), (req, res) => {
-  
   save(req, "Products")
     .then((result) => {
-      res.status(200).send( result );
+      res.status(200).send(result);
     })
     .catch((err) => {
       console.log(err);
@@ -123,10 +122,13 @@ app.put("/updateCategory", (req, res) => {
 });
 
 app.get("/getCountByCategory", (req, res) => {
-  console.log(req.query.category);
-  getProductCountForCategory(req.query.category).then((productCount) => {
-    res.status(200).send({ productCount, category: req.query.category });
-  });
+  getProductCountForCategory()
+    .then((productCount) => {
+      res.status(200).send(productCount);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 });
 
 app.post("/register", (req, res) => {
