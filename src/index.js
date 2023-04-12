@@ -128,7 +128,7 @@ app.put("/updateCategory", (req, res) => {
 app.delete("/deleteByCategory", (req, res) => {
   deleteProduct(req.body.name)
     .then((response) => {
-      console.log(response);
+      
       res.send(response);
     })
     .catch((error) => {
