@@ -82,6 +82,18 @@ export async function save(param, _collection) {
   return data;
 }
 
+export async function saveCategory(param, _collection) {
+  const collectionRef = collection(db, _collection);
+  const docRef = doc(collectionRef);
+
+  await setDoc(docRef, {
+    ...param,
+    id: docRef.id,
+  });
+  param.id = docRef.id;
+  return param;
+}
+
 export async function updateApi(data, collectionParam) {
   var isUpdated = false;
   const docRef = doc(db, collectionParam, data.id);
@@ -93,17 +105,45 @@ export async function updateApi(data, collectionParam) {
   }
   return isUpdated;
 }
+export async function deleteProduct(category) {
+  //const coll = collection(db, "Products");
+  const q = query(
+    collection(db, "Products"),
+    where("category", "==", category)
+  );
+  const snapshot = await getDocs(
+    query(collection(db, "Products"), where("category", "==", category))
+  );
+
+  snapshot.forEach((doc) => {
+    deleteDoc(doc.ref);
+  });
+}
+
+export async function deleteCategory(category) {
+  const docRef = doc(db, "Categories", category.id);
+  const snapShot = await getDoc(docRef);
+  if (snapShot.exists()) {
+    deleteDoc(docRef);
+    const snapshot = await getDocs(
+      query(collection(db, "Products"), where("category", "==", category.name))
+    );
+    snapshot.forEach((doc) => {
+      deleteDoc(doc.ref);
+    });
+    return true;
+  } else return false;
+}
 
 export async function deleteApi(param, _collection) {
   const docRef = doc(db, _collection, param.id);
   const snapShot = await getDoc(docRef);
-
   if (snapShot.exists()) {
     deleteDoc(docRef);
-    console.log("True");
     return true;
   } else return false;
 }
+
 export async function fetch(_collection) {
   const collectionRef = collection(db, _collection);
   const q = query(collectionRef);
@@ -118,17 +158,32 @@ export async function fetch(_collection) {
   return result;
 }
 
+export async function getCountByCategory() {
+  const productsRef = collection(db, "Products");
+  const q = query(productsRef);
+  const querySnapshot = await getDocs(q);
+  const countByCategory = {};
+
+  querySnapshot.forEach((doc) => {
+    const category = doc.data().category;
+    if (countByCategory[category]) {
+      countByCategory[category]++;
+    } else {
+      countByCategory[category] = 1;
+    }
+  });
+  return countByCategory;
+}
 
 export async function getProductCountForCategory() {
   const countFinal = [];
   const categories = await fetch("Categories");
-  
-  
+
   for (const category of categories) {
     const data = await getCount(category.name);
-    countFinal.push({ count: data, category: category.name });    
+    countFinal.push({ count: data, category: category.name });
   }
-  
+
   return countFinal;
 }
 async function getCount(param) {
@@ -155,4 +210,3 @@ export async function uploadFile(file) {
   const downloadUrl = await getDownloadURL(snapshot.ref);
   return downloadUrl;
 }
-

@@ -6,6 +6,10 @@ import {
   deleteApi,
   getProductCountForCategory,
   getUserProfile,
+  deleteProduct,
+  getCountByCategory,
+  saveCategory,
+  deleteCategory,
 } from "./api.js";
 import express from "express";
 import cors from "cors";
@@ -54,7 +58,7 @@ app.get("/fetchAllUsers", (req, res) => {
 
 app.post("/saveCategory", (req, res) => {
   const data = req.body;
-  save(data, "Categories")
+  saveCategory(data, "Categories")
     .then((result) => {
       res.status(200).send(result);
     })
@@ -87,8 +91,9 @@ app.delete("/deleteProduct", (req, res) => {
     });
 });
 app.delete("/deleteCategory", (req, res) => {
-  const data = req.body;
-  deleteApi(data, "Categories")
+  const data = req.body.category;
+
+  deleteCategory(data, "Categories")
     .then((response) => {
       if (response) {
         res.status(200).send(data);
@@ -120,9 +125,19 @@ app.put("/updateCategory", (req, res) => {
     }
   });
 });
-
+app.delete("/deleteByCategory", (req, res) => {
+  deleteProduct(req.body.name)
+    .then((response) => {
+      console.log(response);
+      res.send(response);
+    })
+    .catch((error) => {
+      console.log(error);
+      res.send(error);
+    });
+});
 app.get("/getCountByCategory", (req, res) => {
-  getProductCountForCategory()
+  getCountByCategory()
     .then((productCount) => {
       res.status(200).send(productCount);
     })
@@ -166,7 +181,7 @@ app.get("/fetchUserProfile", (req, res) => {
 
 app.get("/signout", (req, res) => {
   signOutUser()
-    .then(() => res.status(200).send("User signed out successfully"))
+    .then((status) => res.status(200).send({ status }))
     .catch((err) => res.status(500).status(err));
 });
 
