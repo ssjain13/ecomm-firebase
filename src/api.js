@@ -1,7 +1,4 @@
-import { initializeApp, getApp } from "firebase/app";
-
 import {
-  getFirestore,
   doc,
   setDoc,
   collection,
@@ -11,20 +8,22 @@ import {
   getDocs,
   deleteDoc,
   where,
-  getCountFromServer,
 } from "firebase/firestore";
+
+import { getFirestore } from "firebase/firestore";
 import {
   getStorage,
   ref,
   uploadBytesResumable,
   uploadBytes,
   getDownloadURL,
+  deleteObject,
 } from "firebase/storage";
 
-import dotenv from "dotenv";
+import { deleteAuthUser } from "./auth.js";
 
-dotenv.config();
-
+import { app, client } from "./firebase.config.js";
+/* 
 const config = {
   apiKey: process.env.API_KEY,
   authDomain: process.env.AUTH_DOMAIN,
@@ -33,14 +32,15 @@ const config = {
   storageBucket: "gs://my-app-9c783.appspot.com",
   messagingSenderId: process.env.MESSAGE_CODE,
   appId: process.env.APP_ID,
+  credential: admin.credential.cert(serviceAccount),
 };
 
-const app = initializeApp(config);
-
-const db = getFirestore();
-
+export const app = admin.initializeApp(config, "Fashionesta");
+export const authFirebase = getAuth(app);
+*/
+//export const firestore = getFirestore(app);
 export async function getUserProfile(id) {
-  const docRef = collection(db, "User");
+  const docRef = collection(getFirestore(), "User");
   const q = query(docRef, where("uid", "==", id));
 
   const querySnapshot = await getDocs(q);
@@ -56,9 +56,9 @@ export async function getUserProfile(id) {
 
 export async function createUserProfile(userInfo) {
   // Update user profile in firestore.
-  const collectionRef = collection(db, "User");
+  const collectionRef = collection(getFirestore(), "User");
   const docRef = doc(collectionRef);
-
+  userInfo.id = docRef.id;
   await setDoc(docRef, {
     ...userInfo,
   });
@@ -67,7 +67,7 @@ export async function createUserProfile(userInfo) {
 }
 
 export async function save(param, _collection) {
-  const collectionRef = collection(db, _collection);
+  const collectionRef = collection(getFirestore(), _collection);
   const docRef = doc(collectionRef);
   const url = await uploadFile(param.file);
   const data = JSON.parse(param.body.data);
@@ -83,7 +83,7 @@ export async function save(param, _collection) {
 }
 
 export async function saveCategory(param, _collection) {
-  const collectionRef = collection(db, _collection);
+  const collectionRef = collection(getFirestore(), _collection);
   const docRef = doc(collectionRef);
 
   await setDoc(docRef, {
@@ -96,23 +96,38 @@ export async function saveCategory(param, _collection) {
 
 export async function updateApi(data, collectionParam) {
   var isUpdated = false;
-  const docRef = doc(db, collectionParam, data.id);
+  const docRef = doc(getFirestore(), collectionParam, data.id);
   const d = await getDoc(docRef);
-
+  console.log(docRef.path);
+  console.log(d.exists());
+  console.log(d.data());
   if (d.exists()) {
     setDoc(docRef, data);
     isUpdated = true;
   }
   return isUpdated;
 }
+
+export async function deleteUser(user) {
+  try {
+    const collection = collection(getFirestore(), "User", user.id);
+    const doc = await getDoc(collection);
+
+    if (doc.exists) {
+      await doc.delete();
+      deleteAuthUser(doc.data().uid);
+    }
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
 export async function deleteProduct(category) {
-  //const coll = collection(db, "Products");
-  const q = query(
-    collection(db, "Products"),
-    where("category", "==", category)
-  );
   const snapshot = await getDocs(
-    query(collection(db, "Products"), where("category", "==", category))
+    query(
+      collection(getFirestore(), "Products"),
+      where("category", "==", category)
+    )
   );
 
   snapshot.forEach((doc) => {
@@ -121,12 +136,15 @@ export async function deleteProduct(category) {
 }
 
 export async function deleteCategory(category) {
-  const docRef = doc(db, "Categories", category.id);
+  const docRef = doc(getFirestore(), "Categories", category.id);
   const snapShot = await getDoc(docRef);
   if (snapShot.exists()) {
     deleteDoc(docRef);
     const snapshot = await getDocs(
-      query(collection(db, "Products"), where("category", "==", category.name))
+      query(
+        collection(getFirestore(), "Products"),
+        where("category", "==", category.name)
+      )
     );
     snapshot.forEach((doc) => {
       deleteDoc(doc.ref);
@@ -136,16 +154,30 @@ export async function deleteCategory(category) {
 }
 
 export async function deleteApi(param, _collection) {
-  const docRef = doc(db, _collection, param.id);
+  const docRef = doc(getFirestore(), _collection, param.id);
   const snapShot = await getDoc(docRef);
-  if (snapShot.exists()) {
-    deleteDoc(docRef);
-    return true;
-  } else return false;
+  try {
+    if (snapShot.exists()) {
+      deleteProductImage(snapShot.data().url);
+      deleteDoc(docRef);
+      return param.id;
+    } else {
+      throw new Error("Product doesnt exist");
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+async function deleteProductImage(url) {
+  console.log(url);
+  const storage = getStorage(client);
+  const imgRef = ref(storage, url);
+  return await deleteObject(imgRef);
 }
 
+
 export async function fetch(_collection) {
-  const collectionRef = collection(db, _collection);
+  const collectionRef = collection(getFirestore(), _collection);
   const q = query(collectionRef);
   const snapShot = await getDocs(q);
   const result = [];
@@ -159,7 +191,8 @@ export async function fetch(_collection) {
 }
 
 export async function getCountByCategory() {
-  const productsRef = collection(db, "Products");
+  const productsRef = collection(getFirestore(), "Products");
+
   const q = query(productsRef);
   const querySnapshot = await getDocs(q);
   const countByCategory = {};
@@ -187,14 +220,14 @@ export async function getProductCountForCategory() {
   return countFinal;
 }
 async function getCount(param) {
-  const coll = collection(db, "Products");
+  const coll = collection(getFirestore(), "Products");
   const q = query(coll, where("category", "==", param));
   const snapshot = await getDocs(q);
   return snapshot.size;
 }
 
 export async function uploadFile(file) {
-  const storage = getStorage(app);
+  const storage = getStorage(client);
   const timestamp = new Date().getTime();
   const storageRef = ref(
     storage,

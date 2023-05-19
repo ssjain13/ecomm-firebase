@@ -10,7 +10,17 @@ import {
   getCountByCategory,
   saveCategory,
   deleteCategory,
+  deleteUser,
 } from "./api.js";
+
+import {
+  fetchUserProfile,
+  sendVerificationEmail,
+  resetPassword,
+  deleteAccount,
+  accountUpdate,
+  fetchUsers,
+} from "./userActions.js";
 import express from "express";
 import cors from "cors";
 import { createUser, loginUser, signOutUser } from "./auth.js";
@@ -47,7 +57,7 @@ app.get("/fetchProducts", (req, res) => {
 });
 
 app.get("/fetchAllUsers", (req, res) => {
-  fetch("User")
+  fetchUsers()
     .then((data) => {
       res.send(data);
     })
@@ -80,14 +90,11 @@ app.delete("/deleteProduct", (req, res) => {
   const data = req.body;
   deleteApi(data, "Products")
     .then((response) => {
-      if (response) {
-        res.status(200).send(data);
-      } else {
-        res.status(404).send({ message: "Product not found" });
-      }
+      res.status(200).send({ id: response });
     })
     .catch((err) => {
       console.error(err);
+      res.status(404).send({ message: err.message });
     });
 });
 app.delete("/deleteCategory", (req, res) => {
@@ -128,7 +135,6 @@ app.put("/updateCategory", (req, res) => {
 app.delete("/deleteByCategory", (req, res) => {
   deleteProduct(req.body.name)
     .then((response) => {
-      
       res.send(response);
     })
     .catch((error) => {
@@ -168,23 +174,51 @@ app.post("/login", (req, res) => {
     });
 });
 
-app.get("/fetchUserProfile", (req, res) => {
-  const id = req.body.id;
-  getUserProfile(id)
-    .then((user) => {
-      res.status(200).send(user);
-    })
-    .catch((err) => {
-      res.status(500).send({ message: err.message });
-    });
-});
-
 app.get("/signout", (req, res) => {
   signOutUser()
     .then((status) => res.status(200).send({ status }))
     .catch((err) => res.status(500).status(err));
 });
 
+app.post("/sendVerificationEmail", (req, res) => {
+  sendVerificationEmail(req.body.email)
+    .then((status) => res.status(200).send({ status }))
+    .catch((err) => res.status(500).status(err));
+});
+
+app.get("/getUserProfile", (req, res) => {
+  fetchUserProfile(req.body.email)
+    .then((user) => res.status(200).send({ user }))
+    .catch((err) => res.status(500).status(err));
+});
+
+app.post("/resetPassword", (req, res) => {
+  resetPassword(req.body.email)
+    .then((link) => res.status(200).send({ link }))
+    .catch((err) => res.status(500).status(err));
+});
+
+app.post("/disableAccount", (req, res) => {
+  accountUpdate(req.body.uid, true)
+    .then((resp) => res.status(200).send(resp))
+    .catch((err) => res.status(500).status(err));
+});
+
+app.post("/enableAccount", (req, res) => {
+  try {
+    accountUpdate(req.body.uid, false).then((resp) =>
+      res.status(200).send(resp)
+    );
+  } catch (err) {
+    res.status(500).status(err);
+  }
+});
+
+app.post("/deleteAccount", (req, res) => {
+  deleteAccount(req.body.uid)
+    .then((resp) => res.status(200).send(resp))
+    .catch((err) => res.status(500).status(err));
+});
 const PORT = process.env.PORT || 3030;
 
 export const server = app.listen(PORT, () => {
