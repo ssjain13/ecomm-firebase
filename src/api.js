@@ -22,7 +22,7 @@ import {
 
 import { deleteAuthUser } from "./auth.js";
 
-import { app, client } from "./firebase.config.js";
+import {  client } from "./firebase.config.js";
 /* 
 const config = {
   apiKey: process.env.API_KEY,
@@ -98,9 +98,6 @@ export async function updateApi(data, collectionParam) {
   var isUpdated = false;
   const docRef = doc(getFirestore(), collectionParam, data.id);
   const d = await getDoc(docRef);
-  console.log(docRef.path);
-  console.log(d.exists());
-  console.log(d.data());
   if (d.exists()) {
     setDoc(docRef, data);
     isUpdated = true;
@@ -169,12 +166,10 @@ export async function deleteApi(param, _collection) {
   }
 }
 async function deleteProductImage(url) {
-  console.log(url);
   const storage = getStorage(client);
   const imgRef = ref(storage, url);
   return await deleteObject(imgRef);
 }
-
 
 export async function fetch(_collection) {
   const collectionRef = collection(getFirestore(), _collection);

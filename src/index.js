@@ -1,30 +1,27 @@
 import bodyParser from "body-parser";
 import {
-  updateApi,
-  fetch,
-  save,
   deleteApi,
-  getProductCountForCategory,
-  getUserProfile,
-  deleteProduct,
-  getCountByCategory,
-  saveCategory,
   deleteCategory,
-  deleteUser,
+  deleteProduct,
+  fetch,
+  getCountByCategory,
+  save,
+  saveCategory,
+  updateApi
 } from "./api.js";
 
-import {
-  fetchUserProfile,
-  sendVerificationEmail,
-  resetPassword,
-  deleteAccount,
-  accountUpdate,
-  fetchUsers,
-} from "./userActions.js";
-import express from "express";
 import cors from "cors";
-import { createUser, loginUser, signOutUser } from "./auth.js";
+import express from "express";
 import multer from "multer";
+import { createUser, loginUser, signOutUser } from "./auth.js";
+import {
+  accountUpdate,
+  deleteAccount,
+  fetchUserProfile,
+  fetchUsers,
+  resetPassword,
+  sendVerificationEmail,
+} from "./userActions.js";
 export const app = express();
 app.use(bodyParser.json());
 app.use(cors());

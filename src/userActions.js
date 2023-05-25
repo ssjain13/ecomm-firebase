@@ -15,7 +15,6 @@ export async function fetchUsers() {
   try {
     const userList = (await app.auth().listUsers()).users;
 
-    console.log(userList);
     return userList;
   } catch (e) {
     return e;
